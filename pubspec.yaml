@@ -21,8 +21,12 @@ environment:
   sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
+  youtube_player_flutter: ^8.0.0
+#  horizontal_calendar: ^0.0.4
+  horizontal_calendar_widget: ^1.0.1
   flutter:
     sdk: flutter
+
 
 
   # The following adds the Cupertino Icons font to your application.

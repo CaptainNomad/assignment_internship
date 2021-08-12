@@ -1,10 +1,15 @@
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
+import 'package:horizontal_calendar_widget/date_helper.dart';
+import 'package:horizontal_calendar_widget/horizontal_calendar.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:intl/intl.dart';
 
 void main() {
-  runApp(Assignment());
+  runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Assignment()));
 }
 
 Color DayCardColor = const Color(0XFFA7A7A7);
@@ -13,6 +18,9 @@ Color DateColor = const Color(0XFF121212);
 Color LightGrey = const Color(0xFFF1F2F3);
 Color Green = const Color(0XFF85C454);
 Color LightBlue = const Color(0XFFC6E5F7);
+const int days = 30;
+
+DateFormat formatter = DateFormat('dd MMM yyyy');
 
 Row _buildMoodColumn(String percent, String mood, String moodName) {
   return Row(
@@ -150,50 +158,6 @@ Row _buildColumnDull(String moodDull, String moodNameDull) {
   );
 }
 
-Column _buildDate(Color bgColor, Color textColor, String day, String date) {
-  return Column(
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(left: 13, top: 18, bottom: 18),
-        child: Container(
-            height: 70,
-            width: 40,
-            color: Colors.transparent,
-            child: Container(
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, right: 8, top: 8),
-                    child: Text(day,
-                    style: TextStyle(
-                      color: DayCardColor,
-                      fontSize: 15,
-                    ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(date,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: textColor,
-                    ),
-                    ),
-                  ),
-                ],
-              ),
-
-            )),
-      ),
-
-    ],
-  );
-}
-
 Row _buildTime(String time, String emotion) {
   return Row(
     children: [
@@ -219,18 +183,53 @@ Row _buildTime(String time, String emotion) {
   );
 }
 
-Container _scrollCard(String image) {
+Container _scrollCard(String url) {
+  YoutubePlayerController _controller = YoutubePlayerController(
+    initialVideoId: YoutubePlayer.convertUrlToId(url)!,
+    flags: YoutubePlayerFlags(
+      autoPlay: true,
+      mute: true,
+      disableDragSeek: true,
+    ),
+  );
   return Container(
     margin: EdgeInsets.only(left: 13, top: 10, bottom: 20),
     height: 128,
     width: 208,
-    child: Image(
-      image: AssetImage(image),
-      ),
+    child: YoutubePlayer(
+      controller: _controller,
+      liveUIColor: Colors.amber,
+
+    ),
     );
 }
 
-class Assignment extends StatelessWidget {
+class Assignment extends StatefulWidget {
+
+  @override
+  _AssignmentState createState() => _AssignmentState();
+}
+
+class _AssignmentState extends State<Assignment>{
+
+  DateTime selectedDate = DateTime.now();
+  DateTime firstDate = DateTime.now();
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2022));
+    if (picked != null && picked != selectedDate)
+      setState(() {
+        selectedDate = picked;
+      });
+    if(picked != null && selectedDate != firstDate)
+      setState(() {
+        firstDate = selectedDate;
+        print(firstDate);
+      });
+  }
 
   Widget titleContainer = Container(
     child: Stack(
@@ -250,7 +249,6 @@ class Assignment extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(top: 60, bottom: 20),
             child: Text('Your Feelings History',
-              textDirection: TextDirection.ltr,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
@@ -261,7 +259,7 @@ class Assignment extends StatelessWidget {
       ],
     ),
   );
-  
+
   Widget moodRow = Column(
     children: [
       Container(
@@ -282,45 +280,6 @@ class Assignment extends StatelessWidget {
           _buildColumnDull('🍃', 'Calm'),
           _buildColumnDull('😖', 'Bored'),
           _buildColumnDull('🥰', 'Love'),
-        ],
-      ),
-      Divider(
-        color: Colors.black12,
-      )
-    ],
-  );
-
-  Widget dateRow = Column(
-    mainAxisAlignment: MainAxisAlignment.start,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(left: 13),
-        child: Container(
-          width: 78,
-          decoration: BoxDecoration(
-            color: LightBlue,
-            borderRadius: BorderRadius.circular(5.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Text('10 Jun 2021',
-              style: TextStyle(
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-      ),
-      Row(
-        children: [
-          _buildDate(DateCardColor, LightGrey, 'Mo', '10'),
-          _buildDate(Colors.transparent, DateColor, 'Tu', '11'),
-          _buildDate(Colors.transparent, DateColor, 'We', '12'),
-          _buildDate(Colors.transparent, DateColor, 'Th', '13'),
-          _buildDate(Colors.transparent, DateColor, 'Fr', '14'),
-          _buildDate(Colors.transparent, DateColor, 'Sa', '15'),
-          _buildDate(Colors.transparent, DateColor, 'Su', '16'),
         ],
       ),
       Divider(
@@ -381,17 +340,83 @@ class Assignment extends StatelessWidget {
                 children: [
                   titleContainer,
                   moodRow,
-                  dateRow,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 13),
+                        child: Container(
+                          width: 90,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: LightBlue,
+                            borderRadius: BorderRadius.circular(5.0),
+                          ),
+                          child: TextButton(
+                            onPressed: () => _selectDate(context),
+                            child: Text(formatter.format(selectedDate),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                Container(
+                  padding: EdgeInsets.only(left: 13, right: 13, top: 20, bottom: 20),
+                  child: HorizontalCalendar(
+                    labelOrder: [LabelType.weekday, LabelType.date],
+                    height: 70,
+                    padding: EdgeInsets.only(left: 8, right: 8, top: 8, bottom: 14),
+                    firstDate: firstDate,
+                    lastDate: firstDate.add(Duration(days: days - 1)),
+                    initialSelectedDates: [firstDate],
+                    dateFormat: "dd",
+                    dateTextStyle: TextStyle(
+                      color: DateColor,
+                      fontSize: 15,
+                    ),
+                    weekDayFormat: "EEE",
+                    weekDayTextStyle: TextStyle(
+                      color: DateColor,
+                      fontSize: 15,
+                    ),
+                    selectedDateTextStyle: TextStyle(
+                      color: LightGrey,
+                      fontSize: 15,
+                    ),
+                    selectedWeekDayTextStyle: TextStyle(
+                      color: DayCardColor,
+                      fontSize: 15,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: DateCardColor,
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    onDateSelected: (date) =>
+                        setState(() {
+                          selectedDate = date;
+                        }),
+                  ),
+                ),
+                  Divider(
+                    color: Colors.black12,
+                  ),
                   timeColumn,
                   contentColumn,
                   SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _scrollCard('assets/image1.jpg'),
-                        _scrollCard('assets/image2.jpg'),
-                      ],
-                    )
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _scrollCard('https://www.youtube.com/watch?v=oAPCPjnU1wA'),
+                          _scrollCard('https://www.youtube.com/watch?v=g_tea8ZNk5A'),
+                          _scrollCard('https://www.youtube.com/watch?v=2pLT-olgUJs'),
+                        ],
+                      )
                   ),
                 ],
               )
@@ -400,10 +425,6 @@ class Assignment extends StatelessWidget {
         ),
       ),
     );
-
   }
-
-
-
 }
 
